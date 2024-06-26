@@ -47,20 +47,6 @@ router.post('/comida', async (req, res) => {
   }
 });
 
-async function obtenerComidaPorNombre(req, res, next) {
-  let comida;
-  try {
-    comida = await Comida.findOne({ nombre: req.params.nombre });
-    if (comida == null) {
-      return res.status(404).json({ mensaje: 'Platillo no encontrado' });
-    }
-  } catch (err) {
-    return res.status(500).json({ mensaje: err.message });
-  }
-
-  res.comida = comida;
-  next();
-}
 // ACTUALIZAR
 router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
   if (req.body.nombre != null) {
@@ -83,6 +69,7 @@ router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
     res.status(400).json({ mensaje: err.message });
   }
 });
+
 // ELIMINAR POR NOMBRE
 router.delete('/comida/:nombre', async (req, res) => {
   try {
@@ -95,4 +82,19 @@ router.delete('/comida/:nombre', async (req, res) => {
     res.status(500).json({ mensaje: err.message });
   }
 });
+
+async function obtenerComidaPorNombre(req, res, next) {
+  let comida;
+  try {
+    comida = await Comida.findOne({ nombre: req.params.nombre });
+    if (comida == null) {
+      return res.status(404).json({ mensaje: 'Platillo no encontrado' });
+    }
+  } catch (err) {
+    return res.status(500).json({ mensaje: err.message });
+  }
+
+  res.comida = comida;
+  next();
+}
 module.exports = router;
