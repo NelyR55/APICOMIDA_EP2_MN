@@ -61,5 +61,26 @@ async function obtenerComidaPorNombre(req, res, next) {
   res.comida = comida;
   next();
 }
+// ACTUALIZAR
+router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
+  if (req.body.nombre != null) {
+    res.comida.nombre = req.body.nombre;
+  }
+  if (req.body.precio != null) {
+    res.comida.precio = req.body.precio;
+  }
+  if (req.body.descripcion != null) {
+    res.comida.descripcion = req.body.descripcion;
+  }
+  if (req.body.categoria != null) {
+    res.comida.categoria = req.body.categoria;
+  }
 
+  try {
+    const comidaActualizada = await res.comida.save();
+    res.json(comidaActualizada);
+  } catch (err) {
+    res.status(400).json({ mensaje: err.message });
+  }
+});
 module.exports = router;
