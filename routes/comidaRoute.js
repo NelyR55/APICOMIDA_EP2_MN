@@ -83,4 +83,16 @@ router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
     res.status(400).json({ mensaje: err.message });
   }
 });
+// ELIMINAR POR NOMBRE
+router.delete('/comida/:nombre', async (req, res) => {
+  try {
+    const comidaEliminada = await Comida.findOneAndDelete({ nombre: req.params.nombre });
+    if (!comidaEliminada) {
+      return res.status(404).json({ mensaje: 'No se encontró la comida' });
+    }
+    res.json({ mensaje: 'Comida eliminada' });
+  } catch (err) {
+    res.status(500).json({ mensaje: err.message });
+  }
+});
 module.exports = router;
