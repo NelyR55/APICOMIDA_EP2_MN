@@ -12,5 +12,9 @@ router.get('/comida', async (req, res) => {
   }
 });
 
+// CONSULTAR POR NOMBRE
+router.get('/comida/:nombre', obtenerComidaPorNombre, (req, res) => {
+  res.json(res.comida);
+});
 
 module.exports = router;
