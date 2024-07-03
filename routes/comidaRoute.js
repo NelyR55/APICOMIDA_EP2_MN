@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Comida = require('../models/comida');
+const autenticar = require('../middleware/autenticar');
 
-// CONSULTAR TODOS
 router.get('/comida', async (req, res) => {
   try {
     const comidas = await Comida.find();
@@ -12,12 +12,10 @@ router.get('/comida', async (req, res) => {
   }
 });
 
-// CONSULTAR POR NOMBRE
 router.get('/comida/:nombre', obtenerComidaPorNombre, (req, res) => {
   res.json(res.comida);
 });
 
-// CONSULTAR POR CATEGORÍA
 router.get('/comida/categoria/:categoria', async (req, res) => {
   try {
     const comidas = await Comida.find({ categoria: req.params.categoria });
@@ -30,8 +28,7 @@ router.get('/comida/categoria/:categoria', async (req, res) => {
   }
 });
 
-// INSERTAR
-router.post('/comida', async (req, res) => {
+router.post('/comida', autenticar, async (req, res) => {
   const comida = new Comida({
     nombre: req.body.nombre,
     precio: req.body.precio,
@@ -43,12 +40,11 @@ router.post('/comida', async (req, res) => {
     const agregarComida = await comida.save();
     res.status(201).json(agregarComida);
   } catch (err) {
-    res.status(400).json({ mensaje: err.message });
-  }
+    res.status(400).json({ mensaje: err.message });
+  }
 });
 
-// ACTUALIZAR
-router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
+router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, res) => {
   if (req.body.nombre != null) {
     res.comida.nombre = req.body.nombre;
   }
@@ -70,8 +66,7 @@ router.put('/comida/:nombre', obtenerComidaPorNombre, async (req, res) => {
   }
 });
 
-// ELIMINAR POR NOMBRE
-router.delete('/comida/:nombre', async (req, res) => {
+router.delete('/comida/:nombre', autenticar, async (req, res) => {
   try {
     const comidaEliminada = await Comida.findOneAndDelete({ nombre: req.params.nombre });
     if (!comidaEliminada) {
@@ -88,7 +83,7 @@ async function obtenerComidaPorNombre(req, res, next) {
   try {
     comida = await Comida.findOne({ nombre: req.params.nombre });
     if (comida == null) {
-      return res.status(404).json({ mensaje: 'Platillo no encontrado' });
+      return res.status(404).json({ mensaje: 'Comida no encontrada'});
     }
   } catch (err) {
     return res.status(500).json({ mensaje: err.message });
@@ -97,4 +92,5 @@ async function obtenerComidaPorNombre(req, res, next) {
   res.comida = comida;
   next();
 }
+
 module.exports = router;
