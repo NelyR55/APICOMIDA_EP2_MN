@@ -1,4 +1,5 @@
 require('dotenv').config(); // Para cargar variables de entorno desde un archivo .env
+const cors = require('cors')
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
