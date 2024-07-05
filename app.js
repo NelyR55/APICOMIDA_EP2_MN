@@ -20,7 +20,7 @@ app.use(cors());
 
 // Rutas
 app.use('/api', comidaRoute); // Ruta para las comidas
-app.use('/api/auth', authRouter); // Ruta para autenticación
+app.use('/api', authRouter); // Ruta para autenticación
 
 // Protección de rutas
 app.use('/api/protected', autenticar, comidaRoute); // Ruta protegida para comidas
