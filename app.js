@@ -19,7 +19,7 @@ app.use(morgan('dev'));
 app.use(cors());
 
 // Rutas
-app.use('/api/comida', comidaRoute); // Ruta para las comidas
+app.use('/api', comidaRoute); // Ruta para las comidas
 app.use('/api/auth', authRouter); // Ruta para autenticación
 
 // Protección de rutas
