@@ -15,6 +15,7 @@ connectDB();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('dev'));
+app.use(cors());
 
 // Rutas
 app.use('/api/comida', comidaRoute); // Ruta para las comidas
