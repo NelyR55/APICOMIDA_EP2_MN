@@ -1,34 +1,34 @@
-const express = require ("express")
-const morgan = require ("morgan")
-const app = express()
-const port = 3500
+require('dotenv').config(); // Para cargar variables de entorno desde un archivo .env
+const express = require('express');
+const morgan = require('morgan');
+const app = express();
+const port = process.env.PORT || 3000
 const connectDB = require('./config/database');
 const authRouter = require('./routes/auth');
 const autenticar = require('./middleware/autenticar');
-const comidaRoute = require('./routes/comidaRoute')
+const comidaRoute = require('./routes/comidaRoute');
 
+// Conectar a la base de datos
 connectDB();
 
-app.use(express.urlencoded({extended:false}))
+// Middlewares
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(morgan('dev'));
 
-app.use(morgan('dev'))
+// Rutas
+app.use('/api/comida', comidaRoute); // Ruta para las comidas
+app.use('/api/auth', authRouter); // Ruta para autenticación
 
-app.use('/api', comidaRoute)
+// Protección de rutas
+app.use('/api/protected', autenticar, comidaRoute); // Ruta protegida para comidas
 
-// Autenticación
-app.use('/api', authRouter);
-
-// Protección
-app.use('/api', autenticar, comidaRoute);
-
-
+// Ruta no encontrada
 app.use((req, res) => {
-    res.status(404).json({ message: 'Ruta no encontrada' });
+  res.status(404).json({ message: 'Ruta no encontrada' });
 });
 
-app.listen(port,()=> {
-    console.log(`Aplicacion corriendo por el puerto ${port}`)
-})
-
-
+// Iniciar el servidor
+app.listen(port, () => {
+  console.log(`Aplicación corriendo en el puerto ${port}`);
+});
