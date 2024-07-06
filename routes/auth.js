@@ -6,14 +6,15 @@ const Usuario = require('../models/usuario');
 const nodemailer = require('nodemailer');
 
 const JWT_SECRET = 'MaryVillan565250'; 
+const ADMIN_EMAIL = 'nelyr844@gmail.com'; // Email del administrador
 
-// Configuración del transporte de correo
+// Configuración del transporte de nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: 'Gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
+    user: ADMIN_EMAIL,
+    pass: 'contraseña_de_aplicación' // Usa la contraseña de aplicación generada
+  }
 });
 
 // Registro
@@ -24,15 +25,21 @@ router.post('/registro', async (req, res) => {
     const usuario = new Usuario({ nombre, contrasena, aprobado: false });
     await usuario.save();
 
-    // Enviar correo de solicitud de registro
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: 'nelyr844@gmail.com',
-      subject: 'Nueva Solicitud de Registro',
-      text: `Usuario: ${nombre}\nPor favor, revisa la solicitud de registro y acepta o rechaza la solicitud.`
+    // Enviar correo de solicitud de aprobación
+    const mailOptions = {
+      from: ADMIN_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: 'Solicitud de Registro',
+      text: `Nuevo usuario registrado: ${nombre}. Aprobar o rechazar la solicitud.`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res.status(500).json({ mensaje: 'Error al enviar el correo de solicitud.' });
+      }
+      res.status(201).json({ mensaje: 'Usuario registrado. Pendiente de aprobación.' });
     });
 
-    res.status(201).json({ mensaje: 'Usuario registrado. Espera aprobación.' });
   } catch (err) {
     res.status(400).json({ mensaje: err.message });
   }
@@ -48,31 +55,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
     }
 
+    // Verificar si el usuario está aprobado
     if (!usuario.aprobado) {
-      return res.status(403).json({ mensaje: 'Solicitud no aprobada' });
+      return res.status(403).json({ mensaje: 'Usuario no aprobado. Por favor, espera la aprobación.' });
     }
 
-    const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-  } catch (err) {
-    res.status(500).json({ mensaje: err.message });
-  }
-});
-
-// Aceptar solicitud de registro
-router.post('/aceptar-solicitud', async (req, res) => {
-  const { nombre } = req.body;
-
-  try {
-    const usuario = await Usuario.findOne({ nombre });
-    if (!usuario) {
-      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-    }
-
-    usuario.aprobado = true;
-    await usuario.save();
-
-    const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, aprobado: usuario.aprobado }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (err) {
     res.status(500).json({ mensaje: err.message });
