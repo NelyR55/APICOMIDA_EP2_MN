@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'MaryVillan565250'; 
+const JWT_SECRET = 'MaryVillan565250'; // Usa la misma cadena secreta
 
 function autenticar(req, res, next) {
   const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -17,4 +17,13 @@ function autenticar(req, res, next) {
   }
 }
 
-module.exports = autenticar;
+function autorizarPermisos(permisosRequeridos) {
+  return (req, res, next) => {
+    if (req.usuario.permisos !== permisosRequeridos) {
+      return res.status(403).json({ mensaje: 'Permisos insuficientes' });
+    }
+    next();
+  };
+}
+
+module.exports = { autenticar, autorizarPermisos };

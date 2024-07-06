@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Comida = require('../models/comida');
-const autenticar = require('../middleware/autenticar');
+const { autenticar, autorizarPermisos } = require('../middleware/autenticar');
 
 router.get('/comida', async (req, res) => {
   try {
@@ -47,7 +47,7 @@ router.get('/comida/precioex/:precio', async (req, res) => {
   const precio = parseFloat(req.params.precio);
 
   try {
-    const comidas = await Comida.find({ precio });
+    const comidas = await Comida.find({ precio: precio });
     if (comidas.length === 0) {
       return res.status(404).json({ mensaje: 'No se encontraron comidas' });
     }
@@ -57,7 +57,7 @@ router.get('/comida/precioex/:precio', async (req, res) => {
   }
 });
 
-router.post('/comida', autenticar, async (req, res) => {
+router.post('/comida', autenticar, autorizarPermisos('completo'), async (req, res) => {
   const comida = new Comida({
     nombre: req.body.nombre,
     precio: req.body.precio,
@@ -73,7 +73,7 @@ router.post('/comida', autenticar, async (req, res) => {
   }
 });
 
-router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, res) => {
+router.put('/comida/:nombre', autenticar, autorizarPermisos('completo'), obtenerComidaPorNombre, async (req, res) => {
   if (req.body.nombre != null) {
     res.comida.nombre = req.body.nombre;
   }
@@ -95,7 +95,7 @@ router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, re
   }
 });
 
-router.delete('/comida/:nombre', autenticar, async (req, res) => {
+router.delete('/comida/:nombre', autenticar, autorizarPermisos('completo'), async (req, res) => {
   try {
     const comidaEliminada = await Comida.findOneAndDelete({ nombre: new RegExp(req.params.nombre, 'i') });
     if (!comidaEliminada) {
@@ -112,7 +112,7 @@ async function obtenerComidaPorNombre(req, res, next) {
   try {
     comida = await Comida.findOne({ nombre: new RegExp(req.params.nombre, 'i') });
     if (comida == null) {
-      return res.status(404).json({ mensaje: 'Comida no encontrada'});
+      return res.status(404).json({ mensaje: 'Comida no encontrada' });
     }
   } catch (err) {
     return res.status(500).json({ mensaje: err.message });

@@ -62,24 +62,6 @@ router.post('/registro', async (req, res) => {
   }
 });
 
-// Login
-router.post('/login', async (req, res) => {
-  const { nombre, contrasena } = req.body;
-
-  try {
-    const usuario = await Usuario.findOne({ nombre });
-    if (!usuario || !await bcrypt.compare(contrasena, usuario.contrasena) || !usuario.verificado) {
-      return res.status(401).json({ mensaje: 'Credenciales incorrectas o cuenta no verificada' });
-    }
-
-    const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-  } catch (err) {
-    console.error('Error durante el login: ', err);
-    res.status(500).json({ mensaje: 'Error del servidor' });
-  }
-});
-
 // Verificación de correo
 router.get('/verificar/:token', async (req, res) => {
   const token = req.params.token;
@@ -98,6 +80,30 @@ router.get('/verificar/:token', async (req, res) => {
   } catch (err) {
     console.error('Error durante la verificación: ', err);
     res.status(400).json({ mensaje: 'Token de verificación inválido o expirado.' });
+  }
+});
+
+// Login
+router.post('/login', async (req, res) => {
+  const { nombre, contrasena } = req.body;
+
+  try {
+    const usuario = await Usuario.findOne({ nombre });
+    if (!usuario || !await bcrypt.compare(contrasena, usuario.contrasena)) {
+      return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
+    }
+
+    let token;
+    if (usuario.verificado) {
+      token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, permisos: 'completo' }, JWT_SECRET, { expiresIn: '1h' });
+    } else {
+      token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, permisos: 'consulta' }, JWT_SECRET, { expiresIn: '1h' });
+    }
+
+    res.json({ token });
+  } catch (err) {
+    console.error('Error durante el login: ', err);
+    res.status(500).json({ mensaje: 'Error del servidor' });
   }
 });
 
