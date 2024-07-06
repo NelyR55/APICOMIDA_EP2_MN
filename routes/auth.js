@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 const JWT_SECRET = 'MaryVillan565250'; 
 const ADMIN_EMAIL = 'nelyr844@gmail.com'; // Email del administrador
@@ -13,7 +14,7 @@ const transporter = nodemailer.createTransport({
   service: 'Gmail',
   auth: {
     user: ADMIN_EMAIL,
-    pass: 'contraseña_de_aplicación' // Usa la contraseña de aplicación generada
+    pass: 'tu_contraseña_de_aplicación' // Usa la contraseña de aplicación generada
   }
 });
 
@@ -35,6 +36,7 @@ router.post('/registro', async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
+        console.error('Error al enviar el correo:', error); // Imprimir el error en la consola
         return res.status(500).json({ mensaje: 'Error al enviar el correo de solicitud.' });
       }
       res.status(201).json({ mensaje: 'Usuario registrado. Pendiente de aprobación.' });
