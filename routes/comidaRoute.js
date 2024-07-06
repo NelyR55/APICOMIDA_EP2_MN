@@ -47,7 +47,7 @@ router.get('/comida/precioex/:precio', async (req, res) => {
   const precio = parseFloat(req.params.precio);
 
   try {
-    const comidas = await Comida.find({ precio: precio });
+    const comidas = await Comida.find({ precio });
     if (comidas.length === 0) {
       return res.status(404).json({ mensaje: 'No se encontraron comidas' });
     }

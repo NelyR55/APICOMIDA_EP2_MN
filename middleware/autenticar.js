@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'MaryVillan565250'; // Usa la misma cadena secreta
+const JWT_SECRET = 'MaryVillan565250'; 
 
 function autenticar(req, res, next) {
   const token = req.header('Authorization')?.replace('Bearer ', '');
