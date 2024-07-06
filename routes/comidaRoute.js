@@ -18,7 +18,22 @@ router.get('/comida/:nombre', obtenerComidaPorNombre, (req, res) => {
 
 router.get('/comida/categoria/:categoria', async (req, res) => {
   try {
-    const comidas = await Comida.find({ categoria: req.params.categoria });
+    const comidas = await Comida.find({ categoria: new RegExp(req.params.categoria, 'i') });
+    if (comidas.length === 0) {
+      return res.status(404).json({ mensaje: 'No se encontraron comidas' });
+    }
+    res.json(comidas);
+  } catch (err) {
+    res.status(500).json({ mensaje: err.message });
+  }
+});
+
+router.get('/comida/precio/:min/:max', async (req, res) => {
+  const minPrecio = parseFloat(req.params.min);
+  const maxPrecio = parseFloat(req.params.max);
+  
+  try {
+    const comidas = await Comida.find({ precio: { $gte: minPrecio, $lte: maxPrecio } });
     if (comidas.length === 0) {
       return res.status(404).json({ mensaje: 'No se encontraron comidas' });
     }
@@ -68,7 +83,7 @@ router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, re
 
 router.delete('/comida/:nombre', autenticar, async (req, res) => {
   try {
-    const comidaEliminada = await Comida.findOneAndDelete({ nombre: req.params.nombre });
+    const comidaEliminada = await Comida.findOneAndDelete({ nombre: new RegExp(req.params.nombre, 'i') });
     if (!comidaEliminada) {
       return res.status(404).json({ mensaje: 'No se encontró la comida' });
     }
@@ -81,7 +96,7 @@ router.delete('/comida/:nombre', autenticar, async (req, res) => {
 async function obtenerComidaPorNombre(req, res, next) {
   let comida;
   try {
-    comida = await Comida.findOne({ nombre: req.params.nombre });
+    comida = await Comida.findOne({ nombre: new RegExp(req.params.nombre, 'i') });
     if (comida == null) {
       return res.status(404).json({ mensaje: 'Comida no encontrada'});
     }
