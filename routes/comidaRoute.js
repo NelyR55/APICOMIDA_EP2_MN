@@ -3,6 +3,7 @@ const router = express.Router();
 const Comida = require('../models/comida');
 const autenticar = require('../middleware/autenticar');
 
+// Ruta para obtener todas las comidas
 router.get('/comida', async (req, res) => {
   try {
     const comidas = await Comida.find();
@@ -12,10 +13,12 @@ router.get('/comida', async (req, res) => {
   }
 });
 
+// Ruta para obtener una comida por nombre
 router.get('/comida/:nombre', obtenerComidaPorNombre, (req, res) => {
   res.json(res.comida);
 });
 
+// Ruta para obtener comidas por categoría
 router.get('/comida/categoria/:categoria', async (req, res) => {
   try {
     const comidas = await Comida.find({ categoria: new RegExp(req.params.categoria, 'i') });
@@ -28,6 +31,7 @@ router.get('/comida/categoria/:categoria', async (req, res) => {
   }
 });
 
+// Ruta para obtener comidas en un rango de precios
 router.get('/comida/precio/:min/:max', async (req, res) => {
   const minPrecio = parseFloat(req.params.min);
   const maxPrecio = parseFloat(req.params.max);
@@ -43,6 +47,7 @@ router.get('/comida/precio/:min/:max', async (req, res) => {
   }
 });
 
+// Ruta para obtener comidas con un precio exacto
 router.get('/comida/precioex/:precio', async (req, res) => {
   const precio = parseFloat(req.params.precio);
 
@@ -57,7 +62,13 @@ router.get('/comida/precioex/:precio', async (req, res) => {
   }
 });
 
+// Ruta protegida para agregar una nueva comida
 router.post('/comida', autenticar, async (req, res) => {
+  // Verificar si el usuario tiene el permiso de agregar comida
+  if (!req.usuario.aprobado) {
+    return res.status(403).json({ mensaje: 'Acceso denegado. Solo usuarios aprobados pueden agregar comida.' });
+  }
+
   const comida = new Comida({
     nombre: req.body.nombre,
     precio: req.body.precio,
@@ -73,7 +84,13 @@ router.post('/comida', autenticar, async (req, res) => {
   }
 });
 
+// Ruta protegida para actualizar una comida
 router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, res) => {
+  // Verificar si el usuario tiene el permiso de editar comida
+  if (!req.usuario.aprobado) {
+    return res.status(403).json({ mensaje: 'Acceso denegado. Solo usuarios aprobados pueden editar comida.' });
+  }
+
   if (req.body.nombre != null) {
     res.comida.nombre = req.body.nombre;
   }
@@ -95,7 +112,13 @@ router.put('/comida/:nombre', autenticar, obtenerComidaPorNombre, async (req, re
   }
 });
 
+// Ruta protegida para eliminar una comida
 router.delete('/comida/:nombre', autenticar, async (req, res) => {
+  // Verificar si el usuario tiene el permiso de eliminar comida
+  if (!req.usuario.aprobado) {
+    return res.status(403).json({ mensaje: 'Acceso denegado. Solo usuarios aprobados pueden eliminar comida.' });
+  }
+
   try {
     const comidaEliminada = await Comida.findOneAndDelete({ nombre: new RegExp(req.params.nombre, 'i') });
     if (!comidaEliminada) {
@@ -107,12 +130,13 @@ router.delete('/comida/:nombre', autenticar, async (req, res) => {
   }
 });
 
+// Middleware para obtener comida por nombre
 async function obtenerComidaPorNombre(req, res, next) {
   let comida;
   try {
     comida = await Comida.findOne({ nombre: new RegExp(req.params.nombre, 'i') });
     if (comida == null) {
-      return res.status(404).json({ mensaje: 'Comida no encontrada'});
+      return res.status(404).json({ mensaje: 'Comida no encontrada' });
     }
   } catch (err) {
     return res.status(500).json({ mensaje: err.message });
