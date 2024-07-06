@@ -11,17 +11,17 @@ const JWT_SECRET = 'MaryVillan565250';
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'tu_correo@gmail.com',
-    pass: 'tu_contraseña'
+    user: 'nelyr844@gmail.com',
+    pass: 'tu_contraseña' // Reemplaza con tu contraseña de correo
   }
 });
 
 function enviarCorreoVerificacion(email, token) {
   const mailOptions = {
-    from: 'tu_correo@gmail.com',
+    from: 'nelyr844@gmail.com',
     to: email,
     subject: 'Verificación de correo',
-    text: `Por favor, haz clic en el siguiente enlace para verificar tu cuenta: http://tu_dominio.com/verificar/${token}`
+    text: `Por favor, haz clic en el siguiente enlace para verificar tu cuenta: http://localhost:3000/api/verificar/${token}` // Cambia el dominio y el puerto si es necesario
   };
 
   transporter.sendMail(mailOptions, function(error, info) {
@@ -43,7 +43,14 @@ router.post('/registro', async (req, res) => {
   const { nombre, contrasena, email } = req.body;
 
   try {
-    const usuario = new Usuario({ nombre, contrasena, email });
+    // Verifica si el usuario ya está registrado
+    const usuarioExistente = await Usuario.findOne({ email });
+    if (usuarioExistente) {
+      return res.status(400).json({ mensaje: 'El correo electrónico ya está registrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(contrasena, 10); // Hashea la contraseña
+    const usuario = new Usuario({ nombre, contrasena: hashedPassword, email, verificado: false });
     await usuario.save();
 
     const token = generarTokenVerificacion(email);
@@ -61,8 +68,8 @@ router.post('/login', async (req, res) => {
 
   try {
     const usuario = await Usuario.findOne({ nombre });
-    if (!usuario || !await bcrypt.compare(contrasena, usuario.contrasena)) {
-      return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
+    if (!usuario || !await bcrypt.compare(contrasena, usuario.contrasena) || !usuario.verificado) {
+      return res.status(401).json({ mensaje: 'Credenciales incorrectas o cuenta no verificada' });
     }
 
     const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
