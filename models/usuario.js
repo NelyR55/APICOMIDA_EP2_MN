@@ -3,9 +3,7 @@ const bcrypt = require('bcryptjs');
 
 const usuarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true, unique: true },
-  contrasena: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  verificado: { type: Boolean, default: false } // Añadir el campo 'verificado'
+  contrasena: { type: String, required: true }
 });
 
 usuarioSchema.pre('save', async function (next) {

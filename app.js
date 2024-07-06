@@ -1,9 +1,9 @@
 require('dotenv').config(); // Para cargar variables de entorno desde un archivo .env
-const cors = require('cors');
+const cors = require('cors')
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000
 const connectDB = require('./config/database');
 const authRouter = require('./routes/auth');
 const autenticar = require('./middleware/autenticar');
@@ -19,8 +19,8 @@ app.use(morgan('dev'));
 app.use(cors());
 
 // Rutas
-app.use('/api', authRouter); // Ruta para autenticación
 app.use('/api', comidaRoute); // Ruta para las comidas
+app.use('/api', authRouter); // Ruta para autenticación
 
 // Protección de rutas
 app.use('/api/protected', autenticar, comidaRoute); // Ruta protegida para comidas

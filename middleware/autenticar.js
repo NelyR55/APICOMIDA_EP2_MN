@@ -17,13 +17,4 @@ function autenticar(req, res, next) {
   }
 }
 
-function autorizarPermisos(permisosRequeridos) {
-  return (req, res, next) => {
-    if (req.usuario.permisos !== permisosRequeridos) {
-      return res.status(403).json({ mensaje: 'Permisos insuficientes' });
-    }
-    next();
-  };
-}
-
-module.exports = { autenticar, autorizarPermisos };
+module.exports = autenticar;

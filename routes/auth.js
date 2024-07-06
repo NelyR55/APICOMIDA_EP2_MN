@@ -2,84 +2,20 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 const Usuario = require('../models/usuario');
 
-const JWT_SECRET = 'MaryVillan565250';
-
-// Configuración de nodemailer para enviar correos
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'nelyr844@gmail.com',
-    pass: '14sep2003' // Contraseña actualizada
-  }
-});
-
-async function enviarCorreoVerificacion(email, token) {
-  const mailOptions = {
-    from: 'nelyr844@gmail.com',
-    to: email,
-    subject: 'Verificación de correo',
-    text: `Por favor, haz clic en el siguiente enlace para verificar tu cuenta: http://localhost:3000/api/verificar/${token}` // Cambia el dominio y el puerto si es necesario
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Correo enviado: ' + info.response);
-  } catch (error) {
-    console.error('Error al enviar el correo: ', error);
-  }
-}
-
-function generarTokenVerificacion(email) {
-  const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
-  return token;
-}
+const JWT_SECRET = 'MaryVillan565250'; 
 
 // Registro
 router.post('/registro', async (req, res) => {
-  const { nombre, contrasena, email } = req.body;
+  const { nombre, contrasena } = req.body;
 
   try {
-    // Verifica si el usuario ya está registrado
-    const usuarioExistente = await Usuario.findOne({ email });
-    if (usuarioExistente) {
-      return res.status(400).json({ mensaje: 'El correo electrónico ya está registrado' });
-    }
-
-    const hashedPassword = await bcrypt.hash(contrasena, 10); // Hashea la contraseña
-    const usuario = new Usuario({ nombre, contrasena: hashedPassword, email, verificado: false });
+    const usuario = new Usuario({ nombre, contrasena });
     await usuario.save();
-
-    const token = generarTokenVerificacion(email);
-    await enviarCorreoVerificacion(email, token);
-
-    res.status(201).json({ mensaje: 'Usuario registrado. Por favor, verifica tu correo electrónico.' });
+    res.status(201).json({ mensaje: 'Usuario registrado' });
   } catch (err) {
-    console.error('Error durante el registro: ', err);
-    res.status(500).json({ mensaje: 'Error del servidor' });
-  }
-});
-
-// Verificación de correo
-router.get('/verificar/:token', async (req, res) => {
-  const token = req.params.token;
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const usuario = await Usuario.findOne({ email: decoded.email });
-    if (!usuario) {
-      return res.status(400).json({ mensaje: 'Usuario no encontrado' });
-    }
-
-    usuario.verificado = true;
-    await usuario.save();
-
-    res.status(200).json({ mensaje: 'Cuenta verificada. Ahora puedes ver los productos.' });
-  } catch (err) {
-    console.error('Error durante la verificación: ', err);
-    res.status(400).json({ mensaje: 'Token de verificación inválido o expirado.' });
+    res.status(400).json({ mensaje: err.message });
   }
 });
 
@@ -93,17 +29,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
     }
 
-    let token;
-    if (usuario.verificado) {
-      token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, permisos: 'completo' }, JWT_SECRET, { expiresIn: '1h' });
-    } else {
-      token = jwt.sign({ id: usuario._id, nombre: usuario.nombre, permisos: 'consulta' }, JWT_SECRET, { expiresIn: '1h' });
-    }
-
+    const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (err) {
-    console.error('Error durante el login: ', err);
-    res.status(500).json({ mensaje: 'Error del servidor' });
+    res.status(500).json({ mensaje: err.message });
   }
 });
 
