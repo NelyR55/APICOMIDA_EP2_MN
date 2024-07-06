@@ -43,6 +43,20 @@ router.get('/comida/precio/:min/:max', async (req, res) => {
   }
 });
 
+router.get('/comida/precioex/:precio', async (req, res) => {
+  const precio = parseFloat(req.params.precio);
+
+  try {
+    const comidas = await Comida.find({ precio: precio });
+    if (comidas.length === 0) {
+      return res.status(404).json({ mensaje: 'No se encontraron comidas' });
+    }
+    res.json(comidas);
+  } catch (err) {
+    res.status(500).json({ mensaje: err.message });
+  }
+});
+
 router.post('/comida', autenticar, async (req, res) => {
   const comida = new Comida({
     nombre: req.body.nombre,
