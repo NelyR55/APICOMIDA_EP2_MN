@@ -5,18 +5,18 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const Usuario = require('../models/usuario');
 
-const JWT_SECRET = 'MaryVillan565250'; 
+const JWT_SECRET = 'MaryVillan565250';
 
 // Configuración de nodemailer para enviar correos
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'nelyr844@gmail.com',
-    pass: '14sep2003' // Reemplaza con tu contraseña de correo
+    pass: '14sep2003' // Contraseña actualizada
   }
 });
 
-function enviarCorreoVerificacion(email, token) {
+async function enviarCorreoVerificacion(email, token) {
   const mailOptions = {
     from: 'nelyr844@gmail.com',
     to: email,
@@ -24,13 +24,12 @@ function enviarCorreoVerificacion(email, token) {
     text: `Por favor, haz clic en el siguiente enlace para verificar tu cuenta: http://localhost:3000/api/verificar/${token}` // Cambia el dominio y el puerto si es necesario
   };
 
-  transporter.sendMail(mailOptions, function(error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Correo enviado: ' + info.response);
-    }
-  });
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Correo enviado: ' + info.response);
+  } catch (error) {
+    console.error('Error al enviar el correo: ', error);
+  }
 }
 
 function generarTokenVerificacion(email) {
@@ -54,11 +53,12 @@ router.post('/registro', async (req, res) => {
     await usuario.save();
 
     const token = generarTokenVerificacion(email);
-    enviarCorreoVerificacion(email, token);
+    await enviarCorreoVerificacion(email, token);
 
     res.status(201).json({ mensaje: 'Usuario registrado. Por favor, verifica tu correo electrónico.' });
   } catch (err) {
-    res.status(400).json({ mensaje: err.message });
+    console.error('Error durante el registro: ', err);
+    res.status(500).json({ mensaje: 'Error del servidor' });
   }
 });
 
@@ -75,7 +75,8 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: usuario._id, nombre: usuario.nombre }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    console.error('Error durante el login: ', err);
+    res.status(500).json({ mensaje: 'Error del servidor' });
   }
 });
 
@@ -95,6 +96,7 @@ router.get('/verificar/:token', async (req, res) => {
 
     res.status(200).json({ mensaje: 'Cuenta verificada. Ahora puedes ver los productos.' });
   } catch (err) {
+    console.error('Error durante la verificación: ', err);
     res.status(400).json({ mensaje: 'Token de verificación inválido o expirado.' });
   }
 });
