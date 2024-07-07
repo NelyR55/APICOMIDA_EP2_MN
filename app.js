@@ -1,14 +1,13 @@
 require('dotenv').config(); // Para cargar variables de entorno desde un archivo .env
-const cors = require('cors');
+const cors = require('cors')
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000
 const connectDB = require('./config/database');
 const authRouter = require('./routes/auth');
-const comidaRoute = require('./routes/comidaRoute');
 const autenticar = require('./middleware/autenticar');
-const verificarSolicitud = require('./middleware/verificarSolicitud');
+const comidaRoute = require('./routes/comidaRoute');
 
 // Conectar a la base de datos
 connectDB();
@@ -23,11 +22,8 @@ app.use(cors());
 app.use('/api', comidaRoute); // Ruta para las comidas
 app.use('/api', authRouter); // Ruta para autenticación
 
-// Ruta protegida para comidas
-app.use('/api/protected', autenticar, comidaRoute); 
-
-// Ruta para verificar el estado de la solicitud de registro
-app.use('/api/verificar-solicitud', verificarSolicitud, comidaRoute);
+// Protección de rutas
+app.use('/api/protected', autenticar, comidaRoute); // Ruta protegida para comidas
 
 // Ruta no encontrada
 app.use((req, res) => {
