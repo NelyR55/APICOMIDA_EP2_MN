@@ -6,19 +6,6 @@ const Usuario = require('../models/usuario');
 
 const JWT_SECRET = 'MaryVillan565250'; 
 
-// Registro
-router.post('/registro', async (req, res) => {
-  const { nombre, contrasena } = req.body;
-
-  try {
-    const usuario = new Usuario({ nombre, contrasena });
-    await usuario.save();
-    res.status(201).json({ mensaje: 'Usuario registrado' });
-  } catch (err) {
-    res.status(400).json({ mensaje: err.message });
-  }
-});
-
 // Login
 router.post('/login', async (req, res) => {
   const { nombre, contrasena } = req.body;
